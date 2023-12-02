@@ -8,7 +8,7 @@ output: github_document
 Load Necessary Packages.
 ```{r}
 library(tidyverse)
-
+library(purrr)
 knitr::opts_chunk$set(
   fig.width = 8,
   fig.asp = .8,
@@ -17,4 +17,33 @@ knitr::opts_chunk$set(
 ```
 
 # Problem 2
+
+```{r}
+weather_df = 
+  rnoaa::meteo_pull_monitors(
+    c("USW00094728"),
+    var = c("PRCP", "TMIN", "TMAX"), 
+    date_min = "2022-01-01",
+    date_max = "2022-12-31") |>
+  mutate(
+    name = recode(id, USW00094728 = "CentralPark_NY"),
+    tmin = tmin / 10,
+    tmax = tmax / 10) |>
+  select(name, id, everything())
+weather_df
+```
+
+```{r}
+bootstrap_analysis=function(df){
+  fit=lm(tmax ~ tmin + prcp, data = df)
+  r_squared=broom::glance(fit)$r.squared
+  result=broom::tidy(fit)$estimate
+  log_beta_product=log(estimate[2]*estimate[3])
+  return(c(r_squared, log_beta_product))
+}
+
+bootstrap_samples=modelr::bootstrap(weather_df,n = 50)|>
+  map_df(bootstrap_analysis)
+  
+```
 
