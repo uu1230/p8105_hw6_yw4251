@@ -1,0 +1,20 @@
+---
+title: "p8105_hw5_yw4251"
+author: "You Wu"
+date: 2023-11-12
+output: github_document
+---
+# Problem 0
+Load Necessary Packages.
+```{r}
+library(tidyverse)
+
+knitr::opts_chunk$set(
+  fig.width = 8,
+  fig.asp = .8,
+  out.width = "90%"
+)
+```
+
+# Problem 2
+
