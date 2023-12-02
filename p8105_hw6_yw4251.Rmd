@@ -9,6 +9,7 @@ Load Necessary Packages.
 ```{r}
 library(tidyverse)
 library(purrr)
+library(ggridges)
 knitr::opts_chunk$set(
   fig.width = 8,
   fig.asp = .8,
@@ -17,7 +18,7 @@ knitr::opts_chunk$set(
 ```
 
 # Problem 2
-
+Load the dataset.
 ```{r}
 weather_df = 
   rnoaa::meteo_pull_monitors(
@@ -33,17 +34,25 @@ weather_df =
 weather_df
 ```
 
+Finish the bootstrap.
 ```{r}
-bootstrap_analysis=function(df){
-  fit=lm(tmax ~ tmin + prcp, data = df)
-  r_squared=broom::glance(fit)$r.squared
-  result=broom::tidy(fit)$estimate
-  log_beta_product=log(estimate[2]*estimate[3])
-  return(c(r_squared, log_beta_product))
-}
 
-bootstrap_samples=modelr::bootstrap(weather_df,n = 50)|>
-  map_df(bootstrap_analysis)
-  
+bootstrap_analysis=
+  weather_df|>
+  modelr::bootstrap(n = 50)|>
+  mutate(
+    models = map(strap, \(df) lm(tmax ~ tmin + prcp,data=df)),
+    result = map(models, broom::tidy),
+    log_beta_product=map(result, ~log(abs(.x$estimate[2] * .x$estimate[3]))),
+    r.squared=map(models, ~broom::glance(.x)$r.squared)
+    )|>
+  select(-result)|>
+  unnest(c(log_beta_product, r.squared))
+bootstrap_analysis
+```
+Estimate of R^2.
+```{r}
+
+
 ```
 
