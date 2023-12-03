@@ -43,34 +43,45 @@ bootstrap_analysis=
   mutate(
     models = map(strap, \(df) lm(tmax ~ tmin + prcp,data=df)),
     result = map(models, broom::tidy),
-    log_beta01_product=map(result, ~log(.x$estimate[1] * .x$estimate[2])),
-    log_beta12_product=map(result, ~log(.x$estimate[2] * .x$estimate[3])),
+    log_beta_product=map(result, ~log(.x$estimate[2] * .x$estimate[3])),
     r.squared=map(models, ~broom::glance(.x)$r.squared)
     )|>
   select(-result)|>
-  unnest(c(log_beta01_product,log_beta12_product, r.squared))
+  unnest(c(log_beta_product, r.squared))
 bootstrap_analysis
 ```
 
 Estimate of R^2.
 ```{r}
-quantile(bootstrap_analysis$r.squared,c(0.025, 0.975))
+quantiles=quantile(bootstrap_analysis$r.squared,c(0.025, 0.975))
+quantiles
 ggplot(bootstrap_analysis,aes(r.squared))+
-  geom_density()+
-  labs(title = "Distribution of R Square")
+  geom_density(fill = "#ADD8E6", alpha = 0.7)+
+  geom_vline(xintercept = quantiles[1], linetype = "dashed", color = "#00008B", size = 1) +
+  geom_vline(xintercept = quantiles[2], linetype = "dashed", color = "#00008B", size = 1) +
+  labs(
+    title = "Distribution of R Squared with 95% Confidence Interval",
+    x = "R Squared",
+    y = "Density"
+  )+
+  theme_minimal()
 ```
 
+`r mean(is.na(bootstrap_analysis$log_beta_product))` portion of log(β̂1 * β̂2) are NA, in which case product of β̂1 and β̂2 are less than 0 (β̂2 mainly).
 ```{r}
-quantile(bootstrap_analysis$log_beta01_product,c(0.025, 0.975))
+quantiles=quantile(bootstrap_analysis$log_beta_product,c(0.025, 0.975),na.rm=TRUE)
+quantiles
 ggplot(bootstrap_analysis,aes(log_beta_product))+
-  geom_density()+
-  labs(title = "Distribution of ln(β̂0 * β̂1)")
+  geom_density(fill = "#ADD8E6", alpha = 0.7)+
+  geom_vline(xintercept = quantiles[1], linetype = "dashed", color = "#00008B", size = 1) +
+  geom_vline(xintercept = quantiles[2], linetype = "dashed", color = "#00008B", size = 1) +
+  labs(
+    title = "Distribution of log(β̂1 * β̂2) with 95% Confidence Interval",
+    x = "log(β̂1 * β̂2)",
+    y = "Density"
+    )+
+  theme_minimal()
 ```
 
-```{r}
-quantile(bootstrap_analysis$log_beta12_product,c(0.025, 0.975),na.rm=TRUE)
-ggplot(bootstrap_analysis,aes(log_beta_product))+
-  geom_density()+
-  labs(title = "Distribution of ln(β̂1 * β̂2)")
-```
+# Problem 3
 
