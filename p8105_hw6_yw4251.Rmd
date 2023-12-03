@@ -51,7 +51,7 @@ bootstrap_analysis=
 bootstrap_analysis
 ```
 
-Estimate of R^2. The plot illustrates a symmetric distribution of the R-squared statistic. R-squared values cluster tightly around 0.91, suggesting the model explains approximately 91% of the variance in the data, on average. The high density around the peak indicates that most R-squared values are close to the mean, signifying consistent performance of the model. The 95% confidence interval shows the range where the true R-squared value is likely to fall.
+Estimate of R^2. 
 ```{r}
 quantiles=quantile(bootstrap_analysis$r.squared,c(0.025, 0.975))
 quantiles
@@ -67,8 +67,10 @@ ggplot(bootstrap_analysis,aes(r.squared))+
   theme_minimal()
 ```
 
+The plot illustrates a symmetric distribution of the R-squared statistic. R-squared values cluster tightly around 0.91, suggesting the model explains approximately 91% of the variance in the data, on average. The high density around the peak indicates that most R-squared values are close to the mean, signifying consistent performance of the model. The 95% confidence interval shows the range where the true R-squared value is likely to fall.
+
 Estimate of log(β̂1 * β̂2). By calculation, `r mean(is.na(bootstrap_analysis$log_beta_product))*100`% of log(β̂1 * β̂2) are `NA`values. This high proportion of NA values primarily occurs because the product of 
-β̂1 * β̂2 is less than 0, with β̂2 being the main contributing factor. This plot is left skewed, indicating that most values of the log product are small (closer to zero).The peak of the density is negative and close to zero. The confidence interval suggests where the true log(product) value lies with 95% certainty, not crossing into positive values.
+β̂1 * β̂2 is less than 0, with β̂2 being the main contributing factor.
 ```{r}
 quantiles=quantile(bootstrap_analysis$log_beta_product,c(0.025, 0.975),na.rm=TRUE)
 quantiles
@@ -83,6 +85,9 @@ ggplot(bootstrap_analysis,aes(log_beta_product))+
     )+
   theme_minimal()
 ```
+
+This plot is left skewed, indicating that most values of the log product are small (closer to zero).The peak of the density is negative and close to zero. The confidence interval suggests where the true log(product) value lies with 95% certainty, not crossing into positive values.
+
 # Problem 3
 Load and tidy the dataset. 
 ```{r}
@@ -95,6 +100,7 @@ bw=read_csv("data/birthweight.csv")|>
 anyNA(bw)
 bw
 ```
+
 The dataset contains `r nrow(bw)` observations across `r ncol(bw)` variables with no missing values. In the investigation, i want to investigate the impact of several key factors on the weight of a newborn, as measured in grams (bwt): the sex of the baby, the weight of the mother at the time of delivery in pounds, the family's monthly income, the gestational age in weeks, the presence or absence of malformations, the age of the mother at the time of delivery, the races of the mother and father, the average number of cigarettes the mother smoked daily during pregnancy, and the weight gained by the mother during pregnancy in pounds. My investigation aims to elucidate how these variables collectively influence the birth weight of a child. This approach aligns with established research `Factors Affecting Birth Weight of a Newborn – A Community Based Study in Rural Karnataka, India` [https://www.ncbi.nlm.nih.gov/pmc/articles/PMC3390317/]. (Metgud et al., 2012)
 ```{r}
 fit=lm(bwt~babysex+delwt+fincome+gaweeks+malform+momage+mrace+frace+smoken+wtgain,data=bw)
@@ -126,6 +132,7 @@ my_model=lm(bwt~babysex+delwt+gaweeks+malform+mrace+smoken+wtgain,data=bw)
 compmodel1=lm(bwt ~ gaweeks + blength, data = bw)
 compmodel2= lm(bwt ~ bhead + blength + babysex + bhead * blength + bhead * babysex + blength * babysex + bhead * blength * babysex, data = bw)
 ```
+
 Make comparison in terms of the cross-validated prediction error.
 ```{r}
 cv_df=
@@ -145,6 +152,7 @@ cv_df=
     rmse_compmodel1 = map2_dbl(compmodel1, test, ~rmse(model = .x,data = .y)),
     rmse_compmodel2 = map2_dbl(compmodel2, test, ~rmse(model = .x,data = .y)))
 ```
+
 Make a violin Plot for comparison.
 ```{r}
 cv_df |> 
