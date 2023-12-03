@@ -84,4 +84,19 @@ ggplot(bootstrap_analysis,aes(log_beta_product))+
 ```
 
 # Problem 3
+Load and tidy the dataset. 
+```{r}
+bw=read_csv("data/birthweight.csv")|>
+  janitor::clean_names()|>
+  mutate(babysex=as.factor(babysex),
+         frace=as.factor(frace),
+         malform=as.factor(malform),
+         mrace=as.factor(mrace))
+anyNA(bw)
+bw
+```
+The dataset contains `r nrow(bw)` observations across `r ncol(bw)` variables with no missing values.
+```{r}
+
+```
 
