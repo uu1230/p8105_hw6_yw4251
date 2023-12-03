@@ -1,7 +1,7 @@
 ---
-title: "p8105_hw5_yw4251"
+title: "p8105_hw6_yw4251"
 author: "You Wu"
-date: 2023-11-12
+date: 2023-12-02
 output: github_document
 ---
 # Problem 0
@@ -36,7 +36,6 @@ weather_df
 
 Finish the bootstrap.
 ```{r}
-
 bootstrap_analysis=
   weather_df|>
   modelr::bootstrap(n = 5000)|>
@@ -102,7 +101,11 @@ fit|>
   summary()
 ```
 
-The linear regression analysis to predict birthweight (bwt) identifies significant relationships with several variables, including baby's sex (babysex), delivery weight (delwt), gestational weeks (gaweeks), mother's race (mrace2), and smoking status (smoken). The model explains approximately 32.54% of the variability in birthweight (adjusted R-squared: 0.323) and is statistically significant (F-statistic: 139.1, p-value: < 2.2e-16). The significant predictors show both positive and negative relationships with birthweight. For example, baby's sex and smoking status negatively influence birthweight, while delivery weight, gestational weeks, and weight gain during pregnancy positively affect it.
+## Key Findings from the Regression Model:
+**Non-Significant Predictors**: the family's monthly income (fincome), the races of the mother and father, the age of the mother at the time of delivery(momage).
+**Significant Predictors**: baby's sex (babysex), delivery weight (delwt), gestational weeks (gaweeks), mother's race (mrace2), and smoking status (smoken). 
+
+The model explains approximately 32.54% of the variability in birthweight (adjusted R-squared: 0.323) and is statistically significant (F-statistic: 139.1, p-value: < 2.2e-16). The significant predictors show both positive and negative relationships with birthweight. For example, baby's sex and smoking status negatively influence birthweight, while delivery weight, gestational weeks, and weight gain during pregnancy positively affect it.
 
 ```{r}
 bw|>
@@ -111,13 +114,33 @@ bw|>
   ggplot(aes(x=pred,y=resid))+
   geom_point(color="#6C71C4",alpha=0.5)+
   geom_smooth(se = F, color = "red", method = "lm")+
-  labs(x = "Fitted Values", y = "Residuals", title = "Residuals vs. Fitted Values")
+  labs(x = "Fitted Values", y = "Residuals", title = "Residuals vs. Fitted Values")+
+  theme_minimal()
 ```
 
-Fit other two models.
+Modify my model by emitting non-significant variables and fit other two models.
 ```{r}
+my_model=lm(bwt~babysex+delwt+gaweeks+malform+mrace+smoken+wtgain,data=bw)
 compmodel1=lm(bwt ~ gaweeks + blength, data = bw)
 compmodel2= lm(bwt ~ bhead + blength + babysex + bhead * blength + bhead * babysex + blength * babysex + bhead * blength * babysex, data = bw)
+```
+Cross validation.
+```{r}
+cv_df=
+  crossv_mc(bw,100)|>
+   mutate(
+    train = map(train, as_tibble),
+    test = map(test, as_tibble))
 
+cv_df=
+  cv_df|>
+  mutate(
+    my_model  = map(train,~lm(bwt~babysex+delwt+gaweeks+malform+mrace+smoken+wtgain, data = .x)),
+    compmodel1  = map(train, ~lm(bwt ~ gaweeks + blength, data = .x)),
+    compmodel2  = map(train, ~lm(bwt ~ bhead + blength + babysex + bhead * blength + bhead * babysex + blength * babysex + bhead * blength * babysex, data = .x)))|>
+  mutate(
+    rmse_my_model = map2_dbl(my_model, test, ~rmse(model = .x,data = .y)),
+    rmse_compmodel1 = map2_dbl(compmodel1, test, ~rmse(model = .x,data = .y)),
+    rmse_compmodel2 = map2_dbl(compmodel2, test, ~rmse(model = .x,data = .y)))
 ```
 
