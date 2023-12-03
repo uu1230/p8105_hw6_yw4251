@@ -51,7 +51,7 @@ bootstrap_analysis=
 bootstrap_analysis
 ```
 
-Estimate of R^2.
+Estimate of R^2. The plot illustrates a symmetric distribution of the R-squared statistic. R-squared values cluster tightly around 0.91, suggesting the model explains approximately 91% of the variance in the data, on average. The high density around the peak indicates that most R-squared values are close to the mean, signifying consistent performance of the model. The 95% confidence interval shows the range where the true R-squared value is likely to fall.
 ```{r}
 quantiles=quantile(bootstrap_analysis$r.squared,c(0.025, 0.975))
 quantiles
@@ -68,7 +68,7 @@ ggplot(bootstrap_analysis,aes(r.squared))+
 ```
 
 Estimate of log(β̂1 * β̂2). By calculation, `r mean(is.na(bootstrap_analysis$log_beta_product))*100`% of log(β̂1 * β̂2) are `NA`values. This high proportion of NA values primarily occurs because the product of 
-β̂1 * β̂2 is less than 0, with β̂2 being the main contributing factor.
+β̂1 * β̂2 is less than 0, with β̂2 being the main contributing factor. This plot is left skewed, indicating that most values of the log product are small (closer to zero).The peak of the density is negative and close to zero. The confidence interval suggests where the true log(product) value lies with 95% certainty, not crossing into positive values.
 ```{r}
 quantiles=quantile(bootstrap_analysis$log_beta_product,c(0.025, 0.975),na.rm=TRUE)
 quantiles
@@ -83,7 +83,6 @@ ggplot(bootstrap_analysis,aes(log_beta_product))+
     )+
   theme_minimal()
 ```
-
 # Problem 3
 Load and tidy the dataset. 
 ```{r}
