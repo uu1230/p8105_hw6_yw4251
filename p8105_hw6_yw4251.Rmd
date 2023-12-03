@@ -10,6 +10,7 @@ Load Necessary Packages.
 library(tidyverse)
 library(purrr)
 library(ggridges)
+library(modelr)
 knitr::opts_chunk$set(
   fig.width = 8,
   fig.asp = .8,
@@ -38,7 +39,7 @@ Finish the bootstrap.
 ```{r}
 bootstrap_analysis=
   weather_df|>
-  modelr::bootstrap(n = 5000)|>
+  bootstrap(n = 5000)|>
   mutate(
     models = map(strap, \(df) lm(tmax ~ tmin + prcp,data=df)),
     result = map(models, broom::tidy),
@@ -66,7 +67,8 @@ ggplot(bootstrap_analysis,aes(r.squared))+
   theme_minimal()
 ```
 
-`r mean(is.na(bootstrap_analysis$log_beta_product))` portion of log(β̂1 * β̂2) are NA, in which case product of β̂1 and β̂2 are less than 0 (β̂2 mainly).
+Estimate of log(β̂1 * β̂2). By calculation, `r mean(is.na(bootstrap_analysis$log_beta_product))*100`% of log(β̂1 * β̂2) are `NA`values. This high proportion of NA values primarily occurs because the product of 
+β̂1 * β̂2 is less than 0, with β̂2 being the main contributing factor.
 ```{r}
 quantiles=quantile(bootstrap_analysis$log_beta_product,c(0.025, 0.975),na.rm=TRUE)
 quantiles
@@ -101,8 +103,9 @@ fit|>
   summary()
 ```
 
-## Key Findings from the Regression Model:
+### Key Findings from the Regression Model:
 **Non-Significant Predictors**: the family's monthly income (fincome), the races of the mother and father, the age of the mother at the time of delivery(momage).
+
 **Significant Predictors**: baby's sex (babysex), delivery weight (delwt), gestational weeks (gaweeks), mother's race (mrace2), and smoking status (smoken). 
 
 The model explains approximately 32.54% of the variability in birthweight (adjusted R-squared: 0.323) and is statistically significant (F-statistic: 139.1, p-value: < 2.2e-16). The significant predictors show both positive and negative relationships with birthweight. For example, baby's sex and smoking status negatively influence birthweight, while delivery weight, gestational weeks, and weight gain during pregnancy positively affect it.
@@ -124,7 +127,7 @@ my_model=lm(bwt~babysex+delwt+gaweeks+malform+mrace+smoken+wtgain,data=bw)
 compmodel1=lm(bwt ~ gaweeks + blength, data = bw)
 compmodel2= lm(bwt ~ bhead + blength + babysex + bhead * blength + bhead * babysex + blength * babysex + bhead * blength * babysex, data = bw)
 ```
-Cross validation.
+Make comparison in terms of the cross-validated prediction error.
 ```{r}
 cv_df=
   crossv_mc(bw,100)|>
@@ -142,5 +145,17 @@ cv_df=
     rmse_my_model = map2_dbl(my_model, test, ~rmse(model = .x,data = .y)),
     rmse_compmodel1 = map2_dbl(compmodel1, test, ~rmse(model = .x,data = .y)),
     rmse_compmodel2 = map2_dbl(compmodel2, test, ~rmse(model = .x,data = .y)))
+```
+Make a violin Plot for comparison.
+```{r}
+cv_df |> 
+  select(starts_with("rmse")) |> 
+  pivot_longer(
+    everything(),
+    names_to = "model", 
+    values_to = "rmse",
+    names_prefix = "rmse_") |> 
+  mutate(model = fct_inorder(model)) |> 
+  ggplot(aes(x = model, y = rmse)) + geom_violin()
 ```
 
