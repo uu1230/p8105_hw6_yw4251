@@ -156,6 +156,12 @@ cv_df |>
     values_to = "rmse",
     names_prefix = "rmse_") |> 
   mutate(model = fct_inorder(model)) |> 
-  ggplot(aes(x = model, y = rmse)) + geom_violin()
+  ggplot(aes(x = model, y = rmse,fill = model)) + 
+  geom_violin()+
+  scale_fill_brewer(palette = "Pastel2") +
+  labs(x = "Model", y = "RMSE (Root Mean Square Error)", title = "Comparison of Model RMSEs") +
+  theme_minimal()+
+  theme(legend.position = "none")
 ```
 
+The violin plot suggests that compmodel2: One using head circumference, length, sex, and all interactions (including the three-way interaction) between these has the most consistent and lowest RMSE, which indicates best model performance.
