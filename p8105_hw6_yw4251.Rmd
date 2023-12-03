@@ -95,8 +95,29 @@ bw=read_csv("data/birthweight.csv")|>
 anyNA(bw)
 bw
 ```
-The dataset contains `r nrow(bw)` observations across `r ncol(bw)` variables with no missing values.
+The dataset contains `r nrow(bw)` observations across `r ncol(bw)` variables with no missing values. In the investigation, i want to investigate the impact of several key factors on the weight of a newborn, as measured in grams (bwt): the sex of the baby, the weight of the mother at the time of delivery in pounds, the family's monthly income, the gestational age in weeks, the presence or absence of malformations, the age of the mother at the time of delivery, the races of the mother and father, the average number of cigarettes the mother smoked daily during pregnancy, and the weight gained by the mother during pregnancy in pounds. My investigation aims to elucidate how these variables collectively influence the birth weight of a child. This approach aligns with established research `Factors Affecting Birth Weight of a Newborn – A Community Based Study in Rural Karnataka, India` [https://www.ncbi.nlm.nih.gov/pmc/articles/PMC3390317/]. (Metgud et al., 2012)
 ```{r}
+fit=lm(bwt~babysex+delwt+fincome+gaweeks+malform+momage+mrace+frace+smoken+wtgain,data=bw)
+fit|>
+  summary()
+```
+
+The linear regression analysis to predict birthweight (bwt) identifies significant relationships with several variables, including baby's sex (babysex), delivery weight (delwt), gestational weeks (gaweeks), mother's race (mrace2), and smoking status (smoken). The model explains approximately 32.54% of the variability in birthweight (adjusted R-squared: 0.323) and is statistically significant (F-statistic: 139.1, p-value: < 2.2e-16). The significant predictors show both positive and negative relationships with birthweight. For example, baby's sex and smoking status negatively influence birthweight, while delivery weight, gestational weeks, and weight gain during pregnancy positively affect it.
+
+```{r}
+bw|>
+  modelr::add_residuals(fit,var = "pred") |>
+  modelr::add_predictions(fit,var = "resid") |>
+  ggplot(aes(x=pred,y=resid))+
+  geom_point(color="#6C71C4",alpha=0.5)+
+  geom_smooth(se = F, color = "red", method = "lm")+
+  labs(x = "Fitted Values", y = "Residuals", title = "Residuals vs. Fitted Values")
+```
+
+Fit other two models.
+```{r}
+compmodel1=lm(bwt ~ gaweeks + blength, data = bw)
+compmodel2= lm(bwt ~ bhead + blength + babysex + bhead * blength + bhead * babysex + blength * babysex + bhead * blength * babysex, data = bw)
 
 ```
 
